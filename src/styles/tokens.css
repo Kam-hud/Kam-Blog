@@ -1,0 +1,53 @@
+/* 设计令牌：亮色为默认，暗色通过 html[data-theme="dark"] 覆盖同名变量。
+   组件一律引用变量，不写死颜色。 */
+
+:root {
+  /* 颜色 */
+  --bg: #ffffff;
+  --surface: #f8fafc;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #64748b;
+  --accent: #4f46e5;
+  --accent-soft: #eef2ff;
+  --accent-contrast: #ffffff;
+  --code-bg: #0b1020;
+
+  /* 阴影 */
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 10px 24px rgba(15, 23, 42, 0.06);
+
+  /* 圆角 */
+  --radius-card: 10px;
+  --radius-btn: 8px;
+  --radius-pill: 999px;
+
+  /* 间距阶梯 */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 40px;
+
+  /* 布局 */
+  --content-width: 720px;
+  --list-width: 1080px;
+  --nav-height: 60px;
+
+  /* 字体：不引入 web font，保持零字体请求 */
+  --font-sans: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
+  --font-mono: ui-monospace, Consolas, monospace;
+}
+
+html[data-theme='dark'] {
+  --bg: #0b1020;
+  --surface: #131a2e;
+  --border: #24304a;
+  --text: #e6ebf5;
+  --text-muted: #8b98b3;
+  --accent: #818cf8;
+  --accent-soft: #1e1b4b;
+  --accent-contrast: #0b1020;
+  --code-bg: #0b1020;
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 24px rgba(0, 0, 0, 0.35);
+}

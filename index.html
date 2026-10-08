@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="个人博客：做过的东西，和想清楚了的废话。" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- 占位标题：运行时由 src/config.js 的 site.name 覆盖，全站站点名只维护那一处 -->
+    <title>站点名待定</title>
+    <script>
+      // 防白闪：Vue 应用里唯一必须内联的脚本。
+      // 必须放在所有 CSS 之前执行，否则暗色用户刷新时会先看到一帧白屏。
+      (function () {
+        try {
+          var saved = localStorage.getItem('theme')
+          if (saved !== 'light' && saved !== 'dark') {
+            saved = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+          }
+          document.documentElement.dataset.theme = saved
+        } catch (e) {
+          document.documentElement.dataset.theme = 'light'
+        }
+      })()
+    </script>
+  </head>
+  <body>
+    <div id="app"></div>
+    <noscript>
+      <p style="padding: 24px; font-family: system-ui, sans-serif">
+        本站是 Vue 单页应用，需要启用 JavaScript 才能浏览。
+      </p>
+    </noscript>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

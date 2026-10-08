@@ -1,0 +1,22 @@
+{
+  "name": "personal-blog",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "作品集混合型个人博客：Vue 3 + Vite，hash 路由，Markdown 驱动内容",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "highlight.js": "^11.10.0",
+    "markdown-it": "^14.1.0",
+    "vue": "^3.4.0",
+    "vue-router": "^4.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.1.0",
+    "vite": "^5.4.0"
+  }
+}
