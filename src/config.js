@@ -6,8 +6,8 @@
  * 改这一处即可全站生效（index.html 里的 <title> 只是 JS 执行前的占位）。
  */
 export const site = {
-  // 占位：换成你自己的站点名
-  name: '站点名待定',
+  // 站点名：导航左侧、页脚版权、浏览器标签标题都读这里
+  name: 'Kam-Blog',
 
   // 首页 Hero 文案，用户可自行替换
   heroTitle: '写代码，也写字。',
