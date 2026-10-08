@@ -14,7 +14,7 @@ export const site = {
   heroSubtitle: '全栈工程师。这里放我做过的东西，和一些想清楚了的废话。',
 
   // 占位：换成你的 GitHub 用户名，页脚链接与项目源码链接都由此派生
-  githubUser: 'your-github-username',
+  githubUser: 'Kam-hud',
 
   // 关于页
   aboutName: '你的名字',
