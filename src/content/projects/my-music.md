@@ -5,7 +5,7 @@ tech: [Vue 3, Vite, Web Audio API]
 demo: /projects/my-music/
 repo: 
 order: 1
-notice: 当前 Demo 目录为占位页；my-music 的构建产物待其构建完成后接入，届时把 dist/ 的全部内容拷贝覆盖 public/projects/my-music/ 即可，本站代码无需改动。
+notice: 
 ---
 
 ## 项目背景
