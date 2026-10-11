@@ -1,9 +1,9 @@
 ---
 title: my-music
-summary: 一个纯前端的音乐播放器。支持本地曲库、播放列表、歌词滚动和频谱可视化，界面走深色调，键盘快捷键齐全。
-tech: [Vue 3, Vite, Web Audio API]
-demo: /projects/my-music/
-repo: 
+summary: 一个在线音乐播放器。支持在线搜索、在线播放、歌词同步滚动、频谱可视化与歌单管理，界面走深色调，键盘快捷键齐全。
+tech: [Vue 3, Vite, Web Audio API, Node.js 代理]
+demo: https://my-music-m0443ta0s-kams-projects-1d7238ed.vercel.app/
+repo: https://github.com/Kam-hud/My-music
 order: 1
 notice: 
 ---
@@ -43,21 +43,12 @@ notice:
 - 没有做移动端的后台播放，切到别的标签页时浏览器可能挂起 `AudioContext`。
 - 波形样式在高频段不够细腻，受限于分析窗口大小，暂时没有再优化。
 
-## 依赖声明
+**本站 Demo 已部署到 Vercel，点击"在线体验"即可使用完整功能（搜索/播放/歌词/歌单/榜单），不依赖本地代理。**
 
-**本站的 Demo 依赖第三方公开接口，属外部依赖，可能失效。** 如果打开后界面能显示但内容为空、或者长时间加载不出来，多半是接口已经不可用，不是本站的问题。
-
-当前 Demo 目录为占位页，真正的构建产物尚未接入。接入方式见下。
-
-## 接入方式
-
-作品页里的 my-music 卡片会跳转到 `/projects/my-music/`。
-
-**这个目录现在是占位页。** 等 my-music 项目构建完成后，把它的 `dist/` 产物整体拷贝到本站的 `public/projects/my-music/` 目录下覆盖即可：Vite 会把该目录原样复制进构建产物，路由与详情页都不需要改动。
-
-对 my-music 侧有两条硬性要求：
-
-1. `vite.config.js` 中设 `base: './'`（相对模式），这样产物既能在本地 `file://` 下预览，也能正确部署在 `/projects/my-music/` 子目录下。
-2. 内部使用 hash 路由或单页无路由，不要用 history 路由的深链——GitHub Pages 没有服务端 rewrite，刷新即 404。
-
-这样做的好处是：播放器是一个独立的静态站点，不参与本站的打包，两边可以各自独立更新。
+### 本地开发（可选）
+想在本地体验完整功能，需在另一个终端运行 Node 代理：
+```bash
+cd D:\my-music
+npm run server
+```
+代理启动后，博客开发服务器（`npm run dev`）的 Vite proxy 会自动将 `/api` 请求转发到本地代理（端口 3001），在线播放和搜索即可正常工作。
