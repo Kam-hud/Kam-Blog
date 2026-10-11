@@ -42,7 +42,9 @@ const showCover = computed(() => Boolean(props.project.cover) && !coverFailed.va
     </div>
 
     <div class="pcard__body">
-      <h3 class="pcard__title">{{ project.title }}</h3>
+      <h3 class="pcard__title">
+        {{ project.title }} <span class="pcard__arrow" aria-hidden="true">→</span>
+      </h3>
       <p class="pcard__summary">{{ project.summary }}</p>
       <ul v-if="project.tech.length" class="pcard__tags">
         <li v-for="tag in project.tech" :key="tag">
@@ -62,18 +64,21 @@ const showCover = computed(() => Boolean(props.project.cover) && !coverFailed.va
   border-radius: var(--radius-card);
   background: var(--surface);
   color: var(--text);
-  transition: border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
 }
 
 .pcard:hover {
-  border-color: var(--accent);
-  box-shadow: var(--shadow-card);
-  transform: translateY(-2px);
+  border-color: var(--accent-2);
+  /* accent-2 边框光晕：1px 描边 + 主阴影 + violet 辉光 */
+  box-shadow: 0 0 0 1px var(--accent-2), var(--shadow-card),
+    0 14px 34px -14px color-mix(in srgb, var(--accent-2) 55%, transparent);
+  transform: translateY(-3px);
   text-decoration: none;
 }
 
 .pcard__cover {
   aspect-ratio: 16 / 9;
+  overflow: hidden;
   background: var(--code-bg);
 }
 
@@ -81,6 +86,11 @@ const showCover = computed(() => Boolean(props.project.cover) && !coverFailed.va
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.35s ease;
+}
+
+.pcard:hover .pcard__cover img {
+  transform: scale(1.03);
 }
 
 .pcard__cover-fallback {
@@ -105,6 +115,17 @@ const showCover = computed(() => Boolean(props.project.cover) && !coverFailed.va
 .pcard__title {
   margin-bottom: var(--space-2);
   font-size: 1.1rem;
+}
+
+.pcard__arrow {
+  display: inline-block;
+  margin-left: 2px;
+  font-weight: 400;
+  transition: transform 0.25s ease;
+}
+
+.pcard:hover .pcard__arrow {
+  transform: translateX(4px);
 }
 
 .pcard__summary {

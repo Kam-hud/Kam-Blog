@@ -24,7 +24,17 @@ function resolveUrl(url) {
   return `${base.replace(/\/+$/, '/')}${url.replace(/^\/+/, '')}`
 }
 
-const demoUrl = computed(() => resolveUrl(project.value ? project.value.demo : ''))
+const demoUrl = computed(() => {
+  const url = project.value ? project.value.demo : ''
+  if (!url) return ''
+  const resolved = resolveUrl(url)
+  // dev 下 vite 对 public 子目录路径走 SPA fallback，显式补 index.html 保证命中静态产物
+  if (import.meta.env.DEV && url.startsWith('/projects/')) {
+    const [path, hash] = resolved.split('#')
+    return `${path.replace(/\/?$/, '')}/index.html${hash ? `#${hash}` : ''}`
+  }
+  return resolved
+})
 const repoUrl = computed(() => resolveUrl(project.value ? project.value.repo : ''))
 const coverUrl = computed(() => resolveUrl(project.value ? project.value.cover : ''))
 
@@ -72,6 +82,7 @@ watch(
         </a>
         <a v-if="repoUrl" class="btn" :href="repoUrl" target="_blank" rel="noopener">源码 ↗</a>
       </div>
+      <div v-if="!demoUrl && !repoUrl" class="detail__spacer"></div>
 
       <ArticleBody :html="project.html" />
 

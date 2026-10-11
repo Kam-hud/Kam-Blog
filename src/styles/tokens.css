@@ -1,6 +1,47 @@
 /* 设计令牌：亮色为默认，暗色通过 html[data-theme="dark"] 覆盖同名变量。
    组件一律引用变量，不写死颜色。 */
 
+/* ---------- Web 字体：Space Grotesk（标题专用，自托管 woff2，latin 子集） ---------- */
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300;
+  src: url("../assets/fonts/space-grotesk/space-grotesk-latin-300-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url("../assets/fonts/space-grotesk/space-grotesk-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url("../assets/fonts/space-grotesk/space-grotesk-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 600;
+  src: url("../assets/fonts/space-grotesk/space-grotesk-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Space Grotesk";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 700;
+  src: url("../assets/fonts/space-grotesk/space-grotesk-latin-700-normal.woff2") format("woff2");
+}
+
 :root {
   /* 颜色 */
   --bg: #ffffff;
@@ -10,8 +51,13 @@
   --text-muted: #64748b;
   --accent: #4f46e5;
   --accent-soft: #eef2ff;
+  --accent-2: #7c3aed;
+  --accent-2-soft: #f5f3ff;
   --accent-contrast: #ffffff;
   --code-bg: #0b1020;
+
+  /* 渐变令牌：accent(indigo) → accent-2(violet)，亮暗主题各自取值 */
+  --gradient: linear-gradient(120deg, var(--accent) 0%, var(--accent-2) 100%);
 
   /* 阴影 */
   --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.06), 0 10px 24px rgba(15, 23, 42, 0.06);
@@ -34,7 +80,9 @@
   --list-width: 1080px;
   --nav-height: 60px;
 
-  /* 字体：不引入 web font，保持零字体请求 */
+  /* 字体：标题用 Space Grotesk（自托管 woff2，latin 子集，中文自动回退系统字体）；
+     正文保留系统字体栈 */
+  --font-display: "Space Grotesk", "Segoe UI", system-ui, -apple-system, "Microsoft YaHei", sans-serif;
   --font-sans: system-ui, -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif;
   --font-mono: ui-monospace, Consolas, monospace;
 }
@@ -47,6 +95,8 @@ html[data-theme='dark'] {
   --text-muted: #8b98b3;
   --accent: #818cf8;
   --accent-soft: #1e1b4b;
+  --accent-2: #a78bfa;
+  --accent-2-soft: #2e1065;
   --accent-contrast: #0b1020;
   --code-bg: #0b1020;
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.4), 0 10px 24px rgba(0, 0, 0, 0.35);

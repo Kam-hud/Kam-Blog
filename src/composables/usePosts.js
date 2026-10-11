@@ -17,7 +17,7 @@ function slugFromPath(path) {
 }
 
 const collected = Object.entries(modules).map(([path, raw]) => {
-  const { data } = parseFrontmatter(raw)
+  const { data, body } = parseFrontmatter(raw)
   const slug = slugFromPath(path)
   return {
     slug,
@@ -25,6 +25,8 @@ const collected = Object.entries(modules).map(([path, raw]) => {
     title: data.title || slug,
     date: data.date || '',
     summary: data.summary || '',
+    excerpt: makeExcerpt(body),
+    readingMinutes: estimateReadingMinutes(body),
     tags: Array.isArray(data.tags) ? data.tags : [],
   }
 })
@@ -32,20 +34,43 @@ const collected = Object.entries(modules).map(([path, raw]) => {
 /** 全部文章，按日期倒序（date 为 YYYY-MM-DD，字典序即时间序） */
 export const posts = collected.sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
 
+/** 全部标签：去重后按出现次数降序（次数相同按名称升序），供筛选 chips 使用 */
+export const allTags = (() => {
+  const counts = new Map()
+  posts.forEach((post) => {
+    post.tags.forEach((tag) => counts.set(tag, (counts.get(tag) || 0) + 1))
+  })
+  return Array.from(counts.entries())
+    .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
+    .map(([tag]) => tag)
+})()
+
 /** 最新 n 篇，供首页使用 */
 export function latestPosts(n = 5) {
   return posts.slice(0, n)
 }
 
-/** 按年份分组，供文章列表页使用；年份倒序，组内时间倒序 */
-export function postsByYear() {
+/** 按年份分组，供文章列表页使用；年份倒序，组内时间倒序。可传入已过滤的列表 */
+export function postsByYear(source = posts) {
   const groups = new Map()
-  posts.forEach((post) => {
+  source.forEach((post) => {
     const year = (post.date || '').slice(0, 4) || '未标注年份'
     if (!groups.has(year)) groups.set(year, [])
     groups.get(year).push(post)
   })
   return Array.from(groups, ([year, list]) => ({ year, posts: list }))
+}
+
+/** 摘要兜底：剥掉常见 Markdown 标记，取正文前 90 字 */
+function makeExcerpt(body) {
+  const text = String(body)
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/[#>*_`~|-]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return text.length > 90 ? `${text.slice(0, 90)}…` : text
 }
 
 /** 阅读时长：正文非空白字符数，每 400 字 1 分钟，向上取整，最少 1 分钟 */

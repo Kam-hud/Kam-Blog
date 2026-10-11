@@ -19,7 +19,7 @@ body {
   font-size: 16px;
   line-height: 1.75;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 @media (max-width: 480px) {
@@ -33,8 +33,10 @@ h2,
 h3,
 h4 {
   margin: 0 0 var(--space-4);
+  font-family: var(--font-display);
   line-height: 1.3;
   font-weight: 700;
+  letter-spacing: -0.01em;
 }
 
 p {
@@ -110,8 +112,9 @@ pre {
 }
 
 .btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+  box-shadow: 0 4px 14px -8px color-mix(in srgb, var(--accent-2) 55%, transparent);
   text-decoration: none;
 }
 
@@ -124,7 +127,9 @@ pre {
 
 .btn--primary:hover {
   color: var(--accent-contrast);
-  filter: brightness(1.08);
+  /* 渐变令牌落地：primary 按钮 hover 铺 indigo→violet 渐变 */
+  background-image: var(--gradient);
+  filter: brightness(1.05);
 }
 
 /* ---------- 标题块 / 区块 ---------- */
@@ -277,4 +282,33 @@ pre {
 
 .prose a {
   overflow-wrap: anywhere;
+}
+
+/* ---------- 主题切换过渡：暗/亮切换不瞬变 ---------- */
+
+.nav,
+.footer,
+.placeholder {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* ---------- 滚动入场动画（配合 useReveal composable） ---------- */
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.55s ease, transform 0.55s ease;
+}
+
+.reveal--in {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
