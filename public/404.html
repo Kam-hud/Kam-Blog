@@ -7,12 +7,12 @@
   </head>
   <body>
     <p>正在返回首页…</p>
-    <p><a id="home-link" href="/#/">如果浏览器没有自动跳转，点这里回首页</a></p>
+    <p><a id="home-link" href="/Kam-Blog/#/">如果浏览器没有自动跳转，点这里回首页</a></p>
     <script>
       // 兜底：GitHub Pages 没有服务端 rewrite，
       // 访问到任何非 hash 的不存在路径时，统一跳回站点根，由 hash 路由接管。
       (function () {
-        var target = '/#/'
+        var target = '/Kam-Blog/#/'
         try {
           var link = document.getElementById('home-link')
           if (link) link.setAttribute('href', target)
