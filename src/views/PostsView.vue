@@ -33,7 +33,60 @@ const filtered = computed(() => {
   return list
 })
 
-const groups = computed(() => postsByYear(filtered.value))
+const viewMode = ref('year')
+
+const groupModes = [
+  { value: 'category', label: '分类' },
+  { value: 'day', label: '日' },
+  { value: 'week', label: '周' },
+  { value: 'month', label: '月' },
+  { value: 'year', label: '年' },
+]
+
+// 周分组：按自然周（周一为起点）取周一日期作为组标签
+function weekStart(dateStr) {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  const dt = new Date(y, m - 1, d)
+  const day = (dt.getDay() + 6) % 7 // 周一=0
+  dt.setDate(dt.getDate() - day)
+  const mm = String(dt.getMonth() + 1).padStart(2, '0')
+  const dd = String(dt.getDate()).padStart(2, '0')
+  return `${dt.getFullYear()}-${mm}-${dd}`
+}
+
+const groups = computed(() => {
+  const list = filtered.value
+  // 分类聚合：一篇可命中多个标签，无标签归入"未分类"
+  if (viewMode.value === 'category') {
+    const map = new Map()
+    list.forEach((p) => {
+      const tags = p.tags.length ? p.tags : ['未分类']
+      tags.forEach((tag) => {
+        if (!map.has(tag)) map.set(tag, [])
+        map.get(tag).push(p)
+      })
+    })
+    return Array.from(map, ([label, posts]) => ({ label, posts })).sort((a, b) =>
+      a.label.localeCompare(b.label, 'zh-Hans-CN'),
+    )
+  }
+  // 日 / 周 / 月：统一按日期字符串推导组标签
+  if (viewMode.value !== 'year') {
+    const map = new Map()
+    list.forEach((p) => {
+      let label = '未标注日期'
+      if (p.date) {
+        if (viewMode.value === 'day') label = p.date
+        else if (viewMode.value === 'week') label = `${weekStart(p.date)} 周`
+        else label = `${p.date.slice(0, 4)}年${Number(p.date.slice(5, 7))}月`
+      }
+      if (!map.has(label)) map.set(label, [])
+      map.get(label).push(p)
+    })
+    return Array.from(map, ([label, posts]) => ({ label, posts }))
+  }
+  return postsByYear(list).map((g) => ({ label: g.year, posts: g.posts }))
+})
 
 const statusText = computed(() => {
   const kw = keyword.value.trim()
@@ -64,9 +117,26 @@ useReveal()
       <p v-if="statusText" class="filter-bar__status">{{ statusText }}</p>
     </div>
 
+    <div class="group-tabs reveal" role="tablist" aria-label="文章分组方式">
+      <button
+        v-for="mode in groupModes"
+        :key="mode.value"
+        type="button"
+        role="tab"
+        class="group-tabs__tab"
+        :class="{ 'group-tabs__tab--active': viewMode === mode.value }"
+        @click="viewMode = mode.value"
+      >
+        {{ mode.label }}
+      </button>
+    </div>
+
     <template v-if="filtered.length">
-      <section v-for="group in groups" :key="group.year" class="year">
-        <h2 class="year__label">{{ group.year }}</h2>
+      <section v-for="group in groups" :key="group.label" class="year">
+        <h2 class="year__label">
+          {{ group.label }}
+          <span class="year__count">{{ group.posts.length }} 篇</span>
+        </h2>
         <div class="year__list">
           <PostListItem v-for="post in group.posts" :key="post.slug" :post="post" />
         </div>
@@ -123,6 +193,38 @@ useReveal()
   margin: 0;
   color: var(--text-muted);
   font-size: 13px;
+}
+
+.group-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
+}
+
+.group-tabs__tab {
+  padding: 5px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 13.5px;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.group-tabs__tab:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.group-tabs__tab--active {
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 .year {

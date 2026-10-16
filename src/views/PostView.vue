@@ -3,6 +3,7 @@ import { computed, watchEffect } from 'vue'
 import { useRoute } from 'vue-router'
 import ArticleBody from '../components/ArticleBody.vue'
 import ArticleToc from '../components/ArticleToc.vue'
+
 import NotFoundView from './NotFoundView.vue'
 import { getPost } from '../composables/usePosts'
 import { site } from '../config'
@@ -32,7 +33,24 @@ watchEffect(() => {
           </div>
         </header>
 
+        <p v-if="post.summary" class="article__summary">{{ post.summary }}</p>
+
         <ArticleBody :html="post.html" />
+
+        <div v-if="post.toc.length" class="article__foot-toc">
+          <h2 class="article__foot-toc-title">文章目录</h2>
+          <ul class="article__foot-toc-list">
+            <li
+              v-for="item in post.toc"
+              :key="item.id"
+              :class="`article__foot-toc-item--h${item.level}`"
+            >
+              <a :href="`#${item.id}`" @click.prevent="goToId(item.id)">{{ item.text }}</a>
+            </li>
+          </ul>
+        </div>
+
+        <LikeButton :slug="post.slug" />
       </article>
 
       <!-- 窄屏折叠在正文上方，宽屏常驻右侧 -->
@@ -76,6 +94,60 @@ watchEffect(() => {
 
 .article__dot {
   color: var(--border);
+}
+
+.article__summary {
+  margin: 0 0 var(--space-5);
+  padding: var(--space-3) var(--space-4);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 14.5px;
+  line-height: 1.7;
+}
+
+.article__foot-toc {
+  margin-top: var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+
+.article__foot-toc-title {
+  margin: 0 0 var(--space-3);
+  color: var(--text-muted);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.article__foot-toc-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.article__foot-toc-list li {
+  margin: 0 0 2px;
+}
+
+.article__foot-toc-list a {
+  display: block;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+.article__foot-toc-list a:hover {
+  color: var(--accent);
+  background: var(--accent-soft);
+  text-decoration: none;
+}
+
+.article__foot-toc-item--h3 {
+  padding-left: var(--space-4);
 }
 
 .article__toc {

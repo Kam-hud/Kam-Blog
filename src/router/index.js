@@ -7,6 +7,7 @@ import ProjectDetailView from '../views/ProjectDetailView.vue'
 import PostsView from '../views/PostsView.vue'
 import PostView from '../views/PostView.vue'
 import AboutView from '../views/AboutView.vue'
+
 import NotFoundView from '../views/NotFoundView.vue'
 
 // 使用 hash 模式：URL 中 '#' 之后的部分不参与服务器请求，

@@ -92,6 +92,11 @@ pre {
   max-width: var(--content-width);
 }
 
+/* 带锚点的区块：配合吸顶导航，跳转后标题不被遮住（首页左侧垂直导航锚点滚动） */
+[id] {
+  scroll-margin-top: calc(var(--nav-height) + 28px);
+}
+
 /* ---------- 按钮 ---------- */
 
 .btn {
@@ -311,4 +316,34 @@ pre {
     transform: none;
     transition: none;
   }
+}
+
+/* ---------- 纯白卡片（改版：由毛玻璃改为不透明白底，保留圆角与柔和阴影） ---------- */
+
+.glass-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--card-shadow);
+}
+
+/* ---------- 隐藏滚动条（保留滚动能力，仅隐藏视觉样式；亮暗主题通用） ---------- */
+
+html,
+body {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE / 旧版 Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
+* {
+  scrollbar-width: none; /* 隐藏所有滚动容器（代码块等）的滚动条，滚动能力保留 */
+  -ms-overflow-style: none;
 }

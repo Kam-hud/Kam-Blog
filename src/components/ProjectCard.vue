@@ -8,6 +8,11 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+  // 精选模式：首页主打卡（大卡 + Featured 徽章 + 毛玻璃质感），列表页不传
+  featured: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const coverFailed = ref(false)
@@ -22,8 +27,14 @@ const showCover = computed(() => Boolean(props.project.cover) && !coverFailed.va
 </script>
 
 <template>
-  <RouterLink class="pcard" :to="`/projects/${project.slug}`">
+  <RouterLink
+    class="pcard"
+    :class="{ 'pcard--featured': featured }"
+    :to="`/projects/${project.slug}`"
+  >
     <div class="pcard__cover">
+      <!-- 精选徽章：渐变底 pill，仅首页主打卡显示 -->
+      <span v-if="featured" class="pcard__badge">Featured</span>
       <img
         v-if="showCover"
         :src="project.cover"
@@ -77,6 +88,7 @@ const showCover = computed(() => Boolean(props.project.cover) && !coverFailed.va
 }
 
 .pcard__cover {
+  position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   background: var(--code-bg);
@@ -142,5 +154,45 @@ const showCover = computed(() => Boolean(props.project.cover) && !coverFailed.va
   margin: 0;
   padding: 0;
   list-style: none;
+}
+
+/* ---- Featured 精选模式（首页主打卡） ---- */
+
+.pcard--featured {
+  background: var(--glass-bg);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-shadow);
+}
+
+.pcard--featured:hover {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 1px var(--accent-2), var(--glass-shadow),
+    0 16px 40px -16px color-mix(in srgb, var(--accent-2) 55%, transparent);
+}
+
+.pcard__badge {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  padding: 5px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--gradient);
+  color: var(--accent-contrast);
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  box-shadow: 0 8px 20px -8px color-mix(in srgb, var(--accent-2) 60%, transparent);
+}
+
+.pcard--featured .pcard__title {
+  font-size: 1.3rem;
+}
+
+.pcard--featured .pcard__summary {
+  font-size: 15px;
 }
 </style>
