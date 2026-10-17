@@ -10,8 +10,8 @@ export const site = {
   name: 'Kam-Blog',
 
   // 首页 Hero 问候文案，用户可自行替换（定位：个人项目 + 技术文章 + 生活分享）
-  heroTitle: '你好，我是 Kam-hud',
-  heroSubtitle: '写代码，也写字。这里放我做过的东西、想清楚的技术，和一些生活的碎碎念。',
+  avatar:  new URL('./assets/img/header.png', import.meta.url).href,
+  heroTitle: "I'm Kam",
 
   // 占位：换成你的 GitHub 用户名，页脚链接与项目源码链接都由此派生
   githubUser: 'Kam-hud',
@@ -20,7 +20,7 @@ export const site = {
   aboutName: '你的名字',
   aboutHeadline: '全栈工程师 / 主要写前端，偶尔写后端',
   email: 'you@example.com',
-  avatar: '', // 头像图片路径，留空则用首字母色块兜底
+  avatar:  new URL('./assets/img/header.png', import.meta.url).href, // 头像图片路径，留空则用首字母色块兜底
   resume: '', // 简历 PDF 路径（如 /resume.pdf），留空则不渲染该按钮，不产生死链
 
   // 首页动态问候语：按本地时间段切换（6点前=night, 6-12=morning, 12-18=afternoon, 18点后=evening）
@@ -64,6 +64,3 @@ export const site = {
     token: '',
   },
 }
-
-// 由用户名派生，避免两处维护
-site.github = `https://github.com/${site.githubUser}`

@@ -13,7 +13,14 @@ html {
 
 body {
   margin: 0;
-  background: var(--bg);
+  /* 全站统一暖色渐变背景（与首页原 .home-page 一致，子页面同享）：
+     浅灰白底 + 底部暖橙→淡黄渐变（自下而上）+ 顶部两处光晕 */
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(ellipse 60% 45% at 82% 0%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 60%),
+    radial-gradient(ellipse 55% 40% at 10% 6%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 58%),
+    linear-gradient(to top, var(--page-grad-start) 0%, var(--page-grad-mid) 42%, var(--page-grad-end) 78%);
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 16px;
@@ -78,14 +85,12 @@ pre {
 
 .app-main {
   flex: 1 1 auto;
-  padding: var(--space-6) 0;
 }
 
 .container {
   width: 100%;
   max-width: var(--list-width);
   margin: 0 auto;
-  padding: 0 20px;
 }
 
 .container--narrow {
@@ -325,6 +330,20 @@ pre {
   border: 1px solid var(--card-border);
   border-radius: var(--radius-card);
   box-shadow: var(--card-shadow);
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background-color 0.25s ease;
+}
+
+/* 卡片触碰高亮：全站统一（亮暗主题均适用）——描边加深 + 光晕阴影增强 + 底色微亮 */
+.glass-card:hover {
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--card-border));
+  background: color-mix(in srgb, var(--accent-2) 6%, var(--card-bg));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--accent-2) 45%, transparent),
+    var(--card-shadow),
+    0 16px 40px -16px color-mix(in srgb, var(--accent-2) 45%, transparent);
 }
 
 /* ---------- 隐藏滚动条（保留滚动能力，仅隐藏视觉样式；亮暗主题通用） ---------- */

@@ -1,6 +1,5 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
 import ProjectCard from '../components/ProjectCard.vue'
 import PostListItem from '../components/PostListItem.vue'
 import { latestPosts } from '../composables/usePosts'
@@ -12,12 +11,6 @@ const FEATURED_SLOTS = 3
 
 const featured = featuredProjects(FEATURED_SLOTS)
 const latest = latestPosts(5)
-
-// 精选不满 3 个时补虚线占位卡，避免首页看起来像"还没做完"
-const placeholderCount = computed(() => {
-  if (featured.length >= FEATURED_SLOTS) return 0
-  return Math.max(1, FEATURED_SLOTS - featured.length)
-})
 
 // ---- 头像徽标：优先读 config.avatar，缺失时首字母色块兜底 ----
 const avatarFailed = ref(false)
@@ -52,35 +45,6 @@ const greeting = computed(() => {
   if (h < 18) return site.greeting.afternoon
   return site.greeting.evening
 })
-
-// ---- 左侧垂直导航：全部为路由项（近期文章 / 我的项目 / 关于网站），点击跳转子页面 ----
-const navItems = computed(() => site.navItems || [])
-const route = useRoute()
-const activeNav = computed(() => {
-  const matched = navItems.value.find(
-    (i) => i.to && (route.path === i.to || route.path.startsWith(`${i.to}/`)),
-  )
-  return matched ? matched.to : ''
-})
-
-// ---- GitHub 贡献图：本地确定性生成 53 周 × 7 天热力矩阵（视觉占位，后续可换真实数据） ----
-const ghCells = (() => {
-  let seed = 42
-  const rand = () => {
-    seed = (seed * 1103515245 + 12345) & 0x7fffffff
-    return seed / 0x7fffffff
-  }
-  const cells = []
-  for (let w = 0; w < 53; w++) {
-    const col = []
-    for (let d = 0; d < 7; d++) {
-      const r = rand()
-      col.push(r < 0.34 ? 0 : r < 0.6 ? 1 : r < 0.8 ? 2 : r < 0.94 ? 3 : 4)
-    }
-    cells.push(col)
-  }
-  return cells
-})()
 
 // ---- 底部卡片数据：最新文章 / 近期项目 ----
 const latestTop = computed(() => latest[0] || null)
@@ -203,40 +167,6 @@ onUnmounted(() => {
 <template>
   <div class="home-page">
     <div class="container home-layout">
-      <!-- ① 左侧垂直导航：站点名 + GENERAL 分组 + 路由菜单（点击跳转子页面） -->
-      <aside class="side-nav glass-card reveal">
-        <div class="side-nav__brand">
-          <span class="side-nav__avatar">
-            <img
-              v-if="site.avatar && !avatarFailed"
-              :src="resolveUrl(site.avatar)"
-              :alt="`${site.aboutName} 的头像`"
-              @error="avatarFailed = true"
-            />
-            <span v-else aria-hidden="true">{{ heroInitial }}</span>
-          </span>
-          <div class="side-nav__id">
-            <strong class="side-nav__name">{{ site.name }}</strong>
-            <span class="side-nav__role">Developer</span>
-          </div>
-        </div>
-
-        <span class="side-nav__group">GENERAL</span>
-
-        <nav class="side-nav__menu">
-          <RouterLink
-            v-for="item in navItems"
-            :key="item.to"
-            :to="item.to"
-            class="side-nav__link"
-            :class="{ 'side-nav__link--active': activeNav === item.to }"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="iconPath(item.icon)" /></svg>
-            <span>{{ item.label }}</span>
-          </RouterLink>
-        </nav>
-      </aside>
-
       <!-- 主区域：卡片自由错落摆放（flex 流式 + 各卡宽度/错位不同，不重叠） -->
       <div class="home-main">
         <div class="home-cards">
@@ -262,45 +192,30 @@ onUnmounted(() => {
             <span class="image-card__badge">PHOTO</span>
           </article>
 
-          <!-- 问候卡：头像 + 动态问候 + 标题副标题（内容居中） -->
+          <!-- 问候卡：只保留问候语（动态问候 + 标题 + 副标题），其余元素已移出/隐藏 -->
           <section class="intro-card glass-card reveal">
-            <span class="intro-card__avatar">
-              <img
-                v-if="site.avatar && !avatarFailed"
-                :src="resolveUrl(site.avatar)"
-                :alt="`${site.aboutName} 的头像`"
-                @error="avatarFailed = true"
-              />
-              <span v-else aria-hidden="true">{{ heroInitial }}</span>
-            </span>
-            <p class="intro-card__greeting">{{ greeting }}</p>
-            <h2 class="intro-card__title">{{ site.heroTitle }}</h2>
-            <p class="intro-card__subtitle">{{ site.heroSubtitle }}</p>
-            <div class="intro-card__actions">
-              <RouterLink class="btn btn--primary" to="/projects">看作品</RouterLink>
-              <RouterLink class="btn" to="/posts">读文章</RouterLink>
-            </div>
-            <div class="intro-card__socials">
-              <a
-                v-for="s in socialLinks"
-                :key="s.label"
-                class="hero__social"
-                :href="s.href"
-                target="_blank"
-                rel="noopener"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="iconPath(s.icon)" /></svg>
-                {{ s.label }}
-              </a>
+            <img 
+              v-if="site.avatar && !avatarFailed"
+              :src="resolveUrl(site.avatar)" alt="头像"
+              class="intro-card__avatar"
+              @error="avatarFailed = true"
+            >
+            <div class="intro-card__text">
+              <p class="intro-card__greeting">{{ greeting }}</p>
+              <h2 class="intro-card__title">{{ site.heroTitle }}</h2>
             </div>
           </section>
 
-          <!-- 时间卡：上方写文章按钮 + 实时数字时钟 + 日期 -->
-          <section class="clock-card glass-card reveal">
-            <button class="btn btn--primary write-btn" type="button" @click="onWriteClick">
+          <!-- 写文章独立卡片 -->
+          <section class="write-card glass-card reveal">
+            <button class="btn btn--primary write-card__btn" type="button" @click="onWriteClick">
               <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="iconPath('post')" /></svg>
               写文章
             </button>
+          </section>
+
+          <!-- 时间卡：问候卡右边（写文章按钮 + 实时数字时钟 + 日期） -->
+          <section class="clock-card glass-card reveal">
             <span class="clock-card__label">LOCAL TIME</span>
             <div class="clock-card__time">
               <span class="clock-card__digit">{{ clockText }}</span>
@@ -309,40 +224,8 @@ onUnmounted(() => {
             <span class="clock-card__date">{{ dateText }}</span>
           </section>
 
-          <!-- GitHub 贡献图卡 -->
-          <section class="gh-card glass-card reveal">
-            <div class="gh-card__head">
-              <span class="gh-card__title">Contributions</span>
-              <span class="gh-card__sub">过去一年 · {{ site.githubUser }}</span>
-            </div>
-            <div class="gh-card__grid" aria-hidden="true">
-              <template v-for="(col, wi) in ghCells" :key="wi">
-                <span
-                  v-for="(v, di) in col"
-                  :key="di"
-                  class="gh-card__cell"
-                  :class="`gh-card__cell--${v}`"
-                ></span>
-              </template>
-            </div>
-            <a class="gh-card__user" :href="site.github" target="_blank" rel="noopener">{{ site.githubUser }}</a>
-          </section>
-
-          <!-- 最新文章 -->
-          <section class="dash-card glass-card reveal">
-            <span class="dash__label">最新文章</span>
-            <template v-if="latestTop">
-              <RouterLink :to="`/posts/${latestTop.slug}`" class="dash__link">
-                <h3 class="dash__title">{{ latestTop.title }}</h3>
-                <p class="dash__text">{{ latestTop.excerpt }}</p>
-                <span class="dash__date">{{ formatDate(latestTop.date) }}</span>
-              </RouterLink>
-            </template>
-            <p v-else class="dash__text">还没有文章，去 <code>src/content/posts/</code> 写一篇吧。</p>
-          </section>
-
           <!-- 近期项目 -->
-          <section class="dash-card glass-card reveal">
+          <section class="dash-card dash-card--project glass-card reveal">
             <span class="dash__label">近期项目</span>
             <template v-if="featuredTop">
               <RouterLink :to="`/projects/${featuredTop.slug}`" class="dash__link">
@@ -354,8 +237,43 @@ onUnmounted(() => {
             <p v-else class="dash__text">还没有项目，去 <code>src/content/projects/</code> 建一个吧。</p>
           </section>
 
+        </div>
+
+        <!-- 横向错落三卡：最新文章 / 社交 / 播放器，位于侧导航与问候卡下方同一行区域 -->
+        <div class="home-stagger">
+          <!-- 最新文章 -->
+          <section class="dash-card dash-card--latest glass-card reveal">
+            <span class="dash__label">最新文章</span>
+            <template v-if="latestTop">
+              <RouterLink :to="`/posts/${latestTop.slug}`" class="dash__link">
+                <h3 class="dash__title">{{ latestTop.title }}</h3>
+                <p class="dash__text">{{ latestTop.excerpt }}</p>
+                <span class="dash__date">{{ formatDate(latestTop.date) }}</span>
+              </RouterLink>
+            </template>
+            <p v-else class="dash__text">还没有文章，去 <code>src/content/posts/</code> 写一篇吧。</p>
+          </section>
+
+          <!-- 社交 -->
+          <section class="dash-card dash-card--social glass-card reveal">
+            <span class="dash__label">社交</span>
+            <div class="dash__socials">
+              <a
+                v-for="s in socialLinks"
+                :key="s.label"
+                class="dash__social"
+                :href="s.href"
+                target="_blank"
+                rel="noopener"
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="iconPath(s.icon)" /></svg>
+                {{ s.label }}
+              </a>
+            </div>
+          </section>
+
           <!-- 播放器 -->
-          <section class="dash-card glass-card reveal">
+          <section class="dash-card dash-card--player glass-card reveal">
             <span class="dash__label">播放器</span>
             <div class="player">
               <p class="player__song">{{ site.player?.title || '示例曲目' }}</p>
@@ -378,24 +296,6 @@ onUnmounted(() => {
               @play="playerState.playing = true"
               @pause="playerState.playing = false"
             ></audio>
-          </section>
-
-          <!-- 社交 -->
-          <section class="dash-card glass-card reveal">
-            <span class="dash__label">社交</span>
-            <div class="dash__socials">
-              <a
-                v-for="s in socialLinks"
-                :key="s.label"
-                class="dash__social"
-                :href="s.href"
-                target="_blank"
-                rel="noopener"
-              >
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="iconPath(s.icon)" /></svg>
-                {{ s.label }}
-              </a>
-            </div>
           </section>
         </div>
 
@@ -429,154 +329,55 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* ===== 全页暖色渐变背景：浅灰白底 + 底部暖橙→淡黄渐变（自下而上），叠加顶部光晕 ===== */
+/* ===== 全页暖色渐变背景已提升至全局（base.css body），此处不再重复 ===== */
 .home-page {
   min-height: 100vh;
-  background:
-    radial-gradient(ellipse 60% 45% at 82% 0%, color-mix(in srgb, var(--accent-2) 14%, transparent), transparent 60%),
-    radial-gradient(ellipse 55% 40% at 10% 6%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 58%),
-    linear-gradient(to top, var(--page-grad-start) 0%, var(--page-grad-mid) 42%, var(--page-grad-end) 78%);
 }
 
-/* ===== 页面骨架：左导航（sticky）+ 主区域，整体水平居中 ===== */
+/* ===== 页面骨架：主区域全宽；relative+top 视觉下移使问候卡位于视口垂直中心（不撑高布局，保证一屏无滚动）
+   导航已提升为全局常驻组件（App.vue .global-nav 固定定位覆盖在问候卡左侧，位置与本容器对齐） ===== */
 .home-layout {
   display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  gap: var(--space-6);
-  max-width: 1440px;
-  margin: 0 auto;
-  padding-top: var(--space-5);
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  max-width: none;
+  margin: 0;
+  position: relative;
+  top: calc(50vh - 275px);
+  /* 水平左内边距将问候卡（中列）精确推至视口水平中心（导航已不在文档流内，直接按中列半宽推导）：
+     L = 50vw - 中列半宽(16.67vw - 91.33) = 33.33vw + 91.33 */
+  padding: 10px 0 0 calc(33.33vw + 91.33px);
 }
 
-/* 主区域：内容居中 */
+/* 主区域：内容全宽（列宽由 home-cards 动态计算，保证问候卡中列精确对准视口中心） */
 .home-main {
   flex: 1 1 auto;
   min-width: 0;
-  max-width: 1080px;
-  margin: 0 auto;
+  max-width: none;
+  margin: 0;
+  position: relative;
 }
 
-/* ===== 左侧垂直导航 ===== */
-.side-nav {
-  position: sticky;
-  /* 首页无顶部横向导航（参考站 anxforever.cn），sticky 直接吸顶 */
-  top: 20px;
-  flex: 0 0 auto;
-  width: 280px;
-  padding: var(--space-6);
-  border-radius: var(--radius-glass);
-}
+/* ===== 左侧垂直导航已提升为全局组件 SiteNav（App.vue 常驻），样式移至该组件 ===== */
 
-.side-nav__brand {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
-}
-
-.side-nav__avatar {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 54px;
-  height: 54px;
-  overflow: hidden;
-  border-radius: 50%;
-  background: var(--gradient);
-  color: var(--accent-contrast);
-  font-weight: 700;
-  font-size: 1.25rem;
-}
-
-.side-nav__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.side-nav__id {
-  min-width: 0;
-}
-
-.side-nav__name {
-  display: block;
-  font-family: var(--font-display);
-  font-size: 17px;
-  line-height: 1.3;
-}
-
-.side-nav__role {
-  display: block;
-  color: var(--text-muted);
-  font-size: 13px;
-  letter-spacing: 0.04em;
-}
-
-.side-nav__group {
-  display: inline-block;
-  margin-bottom: var(--space-4);
-  padding: 3px 12px;
-  border-radius: var(--radius-pill);
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.12em;
-}
-
-.side-nav__menu {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.side-nav__link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  border-radius: var(--radius-btn);
-  color: var(--text-muted);
-  font-size: 16px;
-  transition: color 0.15s ease, background-color 0.15s ease;
-}
-
-.side-nav__link svg {
-  width: 18px;
-  height: 18px;
-  fill: currentColor;
-}
-
-.side-nav__link:hover {
-  color: var(--accent);
-  background: var(--accent-soft);
-  text-decoration: none;
-}
-
-.side-nav__link--active {
-  color: var(--accent);
-  background: var(--accent-soft);
-  font-weight: 600;
-}
-
-/* ===== 主区域卡片流：无规则自由错落 ===== */
+/* ===== 主区域卡片流：5 列（左列/间隙/中列/间隙/右列），问候卡居于中间行中列（精确对准视口中心），其余卡片四周围绕错落 ===== */
 .home-cards {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: center;
-  gap: var(--space-5);
-  padding-bottom: var(--space-6);
+  display: grid;
+  grid-template-columns: 0 0 calc(33.33vw - 182.67px) 10px calc(33.33vw + 81.33px);
+  grid-template-rows: 132px 250px 132px;
+  row-gap: 8px;
+  align-items: start;
 }
 
-/* 图片卡：独占一行位于问候卡上方，点击灯箱查看大图 */
+/* 图片卡：问候卡正上方，点击灯箱查看大图 */
 .image-card {
   position: relative;
-  flex: 0 0 100%;
+  grid-column: 3;
+  grid-row: 1;
   width: 100%;
-  height: 240px;
-  margin: 0;
+  height: 150px;
+  margin-top: -24px;
   overflow: hidden;
   padding: 0;
   border-radius: var(--radius-glass);
@@ -630,50 +431,42 @@ onUnmounted(() => {
   letter-spacing: 0.14em;
 }
 
-/* 问候卡：头像 + 动态问候 + 标题副标题（内容居中） */
+/* 问候卡：仅问候语（动态问候 + 标题 + 副标题），内容垂直居中，高度与左侧导航一致保证底边平行 */
 .intro-card {
-  flex: 0 1 560px;
-  padding: var(--space-6);
+  grid-column: 3;
+  grid-row: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 250px;
+  padding: var(--space-4);
   border-radius: var(--radius-glass);
   text-align: center;
 }
 
 .intro-card__avatar {
-  display: grid;
-  place-items: center;
-  width: 88px;
-  height: 88px;
-  margin: 0 auto;
-  overflow: hidden;
-  border-radius: 50%;
-  background: var(--gradient);
-  color: var(--accent-contrast);
-  font-size: 2rem;
-  font-weight: 700;
-  box-shadow:
-    0 0 0 4px var(--bg),
-    0 0 0 6px color-mix(in srgb, var(--warm-accent) 55%, transparent),
-    0 16px 34px -14px color-mix(in srgb, var(--accent) 55%, transparent);
-}
-
-.intro-card__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  width: 72px;              /* ← 头像大小，改这里 */
+  height: 72px;             /* ← 保持与 width 相等才是正圆 */
+  border-radius: 50%;       /* 圆形；想要圆角矩形改成 16px */
+  object-fit: cover;        /* 关键：不变形，裁切填充 */
+  margin-bottom: var(--space-4);   /* 与下方问候语留距 */
+  box-shadow: 0 0 0 3px var(--bg), 0 10px 24px -10px color-mix(in srgb, var(--accent) 55%, transparent);
+  flex: 0 0 auto;           /* 防止被 flex 容器压扁 */
 }
 
 .intro-card__greeting {
-  margin: var(--space-5) 0 0;
+  margin: 0 0 var(--space-3);
   color: var(--warm-accent);
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
 }
 
 .intro-card__title {
-  margin: var(--space-2) 0 var(--space-3);
-  font-size: clamp(2rem, 5vw, 2.9rem);
+  margin: 0 0 var(--space-3);
+  font-size: clamp(1.9rem, 4.5vw, 2.5rem);
   line-height: 1.15;
   letter-spacing: -0.02em;
   background: var(--gradient);
@@ -682,71 +475,28 @@ onUnmounted(() => {
   color: transparent;
 }
 
-.intro-card__subtitle {
-  margin-bottom: var(--space-4);
-  color: var(--text-muted);
-  font-size: 1.02rem;
-  line-height: 1.7;
-}
-
-.intro-card__actions {
+/* 写文章按钮 */
+.write-card {
+  width: 320px;
+  grid-column: 5;
+  grid-row: 1;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
   gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-glass);
+  text-align: center;
+  /* 可选：和图片卡对齐，图片卡有 margin-top: -24px */
+  margin-top: 0;
 }
 
-.intro-card__socials {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--space-2);
-  margin-top: var(--space-4);
-}
-
-.hero__social {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-pill);
-  background: var(--bg);
-  color: var(--text-muted);
-  font-size: 13.5px;
-  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.hero__social svg {
-  width: 15px;
-  height: 15px;
-  fill: currentColor;
-}
-
-.hero__social:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 20px -10px rgba(99, 102, 241, 0.5);
-  text-decoration: none;
-}
-
-/* 写文章按钮（时钟卡上方） */
-.write-btn {
-  position: absolute;
-  top: -46px;
-  left: 50%;
-  transform: translateX(-50%);
+.write-card__btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-}
-
-.write-btn svg {
-  width: 15px;
-  height: 15px;
-  fill: currentColor;
 }
 
 /* ===== 灯箱：图片大图预览 ===== */
@@ -839,13 +589,14 @@ onUnmounted(() => {
   to { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* ===== 时间卡 ===== */
+/* ===== 时间卡：问候卡右边错落 ===== */
 .clock-card {
   position: relative;
-  flex: 0 1 300px;
-  margin-top: 72px;
-  margin-right: 6px;
-  padding: var(--space-5);
+  grid-column: 5;
+  grid-row: 2;
+  width: 320px;
+  margin-top: 26px;
+  padding: var(--space-4);
   border-radius: var(--radius-glass);
   text-align: center;
 }
@@ -866,7 +617,7 @@ onUnmounted(() => {
 
 .clock-card__digit {
   font-family: var(--font-display);
-  font-size: 2.6rem;
+  font-size: 2.2rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
@@ -876,68 +627,13 @@ onUnmounted(() => {
 .clock-card__sec {
   font-family: var(--font-display);
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-variant-numeric: tabular-nums;
 }
 
 .clock-card__date {
   color: var(--text-muted);
-  font-size: 13px;
-}
-
-/* ===== GitHub 贡献图卡 ===== */
-.gh-card {
-  flex: 0 1 420px;
-  margin-top: 14px;
-  margin-left: 26px;
-  padding: var(--space-5);
-  border-radius: var(--radius-glass);
-}
-
-.gh-card__head {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: var(--space-3);
-  margin-bottom: var(--space-4);
-}
-
-.gh-card__title {
-  font-family: var(--font-display);
-  font-size: 1.1rem;
-  font-weight: 700;
-}
-
-.gh-card__sub {
-  color: var(--text-muted);
-  font-size: 12.5px;
-}
-
-.gh-card__grid {
-  display: grid;
-  grid-template-columns: repeat(53, minmax(2px, 1fr));
-  gap: 3px;
-  overflow: hidden;
-}
-
-.gh-card__cell {
-  aspect-ratio: 1;
-  border-radius: 2px;
-  background: var(--gh-cell-0);
-}
-
-.gh-card__cell--1 { background: var(--gh-cell-1); }
-.gh-card__cell--2 { background: var(--gh-cell-2); }
-.gh-card__cell--3 { background: var(--gh-cell-3); }
-.gh-card__cell--4 { background: var(--gh-cell-4); }
-
-.gh-card__user {
-  display: block;
-  margin-top: var(--space-3);
-  color: var(--text-muted);
-  font-family: var(--font-mono);
-  font-size: 12.5px;
-  text-align: right;
+  font-size: 12px;
 }
 
 /* ===== 精选项目：Featured 大卡 + 侧边精选卡 ===== */
@@ -1035,38 +731,104 @@ onUnmounted(() => {
   gap: var(--space-2);
 }
 
-/* ===== 底部卡片流：最新文章 / 近期项目 / 播放器 / 社交（错落摆放） ===== */
+/* ===== 环绕卡片：最新文章 / 近期项目 / 播放器 / 社交（问候卡四周围绕错落） ===== */
 .dash-card {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  flex: 0 1 340px;
-  padding: var(--space-5);
+  gap: 6px;
+  width: 320px;
+  height:180px;
+  padding: var(--space-4);
   border-radius: var(--radius-glass);
 }
 
-.dash-card:nth-child(5) {
-  flex: 0 1 380px;
-  margin-top: 42px;
-  margin-left: 24px;
+/* 近期项目卡：问候卡右下方 */
+.dash-card--project { grid-column: 5; grid-row: 3; margin-top: 18px; }
+
+/* ===== 横向错落三卡：最新文章 / 社交 / 播放器（侧导航与问候卡下方同一行区域，垂直偏移形成错落）
+   绝对定位于 home-main 底部，不参与文档流高度，避免撑高布局破坏侧导航与问候卡的平行对齐 */
+.home-stagger {
+  position: absolute;
+  left: -246px;
+  right: auto;
+  top: calc(100% - 114px);   
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 12px;
 }
 
-.dash-card:nth-child(6) {
-  flex: 0 1 320px;
-  margin-top: 18px;
-  margin-right: 18px;
+.home-stagger .dash-card {
+  flex: 0 0 290px;
+  min-width: 296px;
+  min-height: 140px;
+  padding: 5px 8px;
+  gap: 3px;
 }
 
-.dash-card:nth-child(7) {
-  flex: 0 1 360px;
-  margin-top: 66px;
-  margin-left: 12px;
+.home-stagger .dash__label {
+  font-size: 10px;
 }
 
-.dash-card:nth-child(8) {
-  flex: 0 1 300px;
-  margin-top: 8px;
-  margin-right: 30px;
+.home-stagger .dash__title {
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-stagger .dash__text {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 10.5px;
+}
+
+.home-stagger .player {
+  gap: 3px;
+}
+
+.home-stagger .player__song {
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-stagger .player__controls {
+  gap: 5px;
+}
+
+.home-stagger .player__btn {
+  width: 24px;
+  height: 24px;
+}
+
+.home-stagger .player__btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+.home-stagger .player__time {
+  font-size: 10px;
+}
+
+.home-stagger .player__hint {
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.home-stagger .dash__social {
+  padding: 4px 8px;
+  font-size: 11px;
+}
+
+.home-stagger .dash__social svg {
+  width: 12px;
+  height: 12px;
 }
 
 .dash__label {
@@ -1078,14 +840,15 @@ onUnmounted(() => {
 
 .dash__title {
   margin: 0 0 var(--space-2);
-  font-size: 1.02rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
 }
 
 .dash__text {
   margin: 0;
   color: var(--text-muted);
-  font-size: 13.5px;
-  line-height: 1.6;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 .dash__date {
@@ -1126,8 +889,8 @@ onUnmounted(() => {
   flex: 0 0 auto;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border: 1px solid var(--border);
   border-radius: 50%;
   background: var(--gradient);
@@ -1154,7 +917,7 @@ onUnmounted(() => {
 
 .player__bar {
   flex: 1 1 auto;
-  height: 6px;
+  height: 5px;
   border-radius: 999px;
   background: var(--border);
   cursor: pointer;
@@ -1219,21 +982,39 @@ onUnmounted(() => {
   .home-layout {
     flex-direction: column;
     align-items: stretch;
+    margin-top: 0;
+    position: static;
   }
 
   .home-main {
     max-width: 100%;
   }
 
-  .side-nav {
-    position: static;
-    width: auto;
-    max-width: 420px;
+  /* 窄屏回归流式布局：grid 区域失效，按文档顺序换行排列 */
+  .home-cards {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: center;
+    gap: var(--space-4);
+    padding-bottom: var(--space-5);
   }
 
-  .side-nav__menu {
-    flex-direction: row;
+  /* 三卡同步换行：横向错落仅保留在桌面布局，窄屏按 2+1 流式排布 */
+  .home-stagger {
+    position: static;
     flex-wrap: wrap;
+    margin-top: var(--space-4);
+  }
+
+  .home-stagger .dash-card {
+    flex-basis: calc(50% - var(--space-4) / 2);
+    margin-top: 0;
+  }
+
+  .intro-card {
+    height: auto;
+    min-height: 240px;
   }
 }
 
@@ -1241,7 +1022,6 @@ onUnmounted(() => {
   .image-card,
   .intro-card,
   .clock-card,
-  .gh-card,
   .dash-card {
     flex-basis: 100%;
     margin-top: 0;
@@ -1253,12 +1033,6 @@ onUnmounted(() => {
 @media (max-width: 480px) {
   .intro-card {
     padding: var(--space-4);
-  }
-
-  .intro-card__avatar {
-    width: 64px;
-    height: 64px;
-    font-size: 1.5rem;
   }
 
   .about {
