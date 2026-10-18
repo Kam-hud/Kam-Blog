@@ -58,5 +58,10 @@ const navMode = computed(() => (isHome.value ? 'home' : 'sub'))
   .app-main--sub {
     padding-top: 72px;
   }
+
+  /* 首页导航同样转为顶部通栏，需为内容预留空间避免被固定导航遮挡 */
+  .app-main:not(.app-main--sub) {
+    padding-top: 116px;
+  }
 }
 </style>

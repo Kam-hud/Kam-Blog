@@ -294,14 +294,6 @@ pre {
   overflow-wrap: anywhere;
 }
 
-/* ---------- 主题切换过渡：暗/亮切换不瞬变 ---------- */
-
-.nav,
-.footer,
-.placeholder {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
 /* ---------- 滚动入场动画（配合 useReveal composable） ---------- */
 
 .reveal {

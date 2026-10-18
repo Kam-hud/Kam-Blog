@@ -79,15 +79,6 @@ function estimateReadingMinutes(text) {
   return Math.max(1, Math.ceil(count / 400))
 }
 
-/** 按标签关键词匹配文章：任一关键词命中 tags 即入选（如生活分享匹配 ['随笔','生活']） */
-export function postsByTags(keywords = [], limit = Infinity) {
-  if (!Array.isArray(keywords) || keywords.length === 0) return []
-  const set = new Set(keywords.map((k) => String(k).trim()).filter(Boolean))
-  if (set.size === 0) return []
-  const matched = posts.filter((post) => post.tags.some((tag) => set.has(tag)))
-  return limit === Infinity ? matched : matched.slice(0, limit)
-}
-
 /** 单篇：返回 { ...meta, html, toc, readingMinutes }；不存在返回 null */
 export function getPost(slug) {
   const post = posts.find((item) => item.slug === slug)

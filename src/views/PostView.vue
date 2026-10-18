@@ -50,7 +50,6 @@ watchEffect(() => {
           </ul>
         </div>
 
-        <LikeButton :slug="post.slug" />
       </article>
 
       <!-- 窄屏折叠在正文上方，宽屏常驻右侧 -->

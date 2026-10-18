@@ -1,7 +1,5 @@
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
-import ProjectCard from '../components/ProjectCard.vue'
-import PostListItem from '../components/PostListItem.vue'
 import { latestPosts } from '../composables/usePosts'
 import { featuredProjects } from '../composables/useProjects'
 import { useReveal } from '../composables/useReveal'
@@ -50,17 +48,7 @@ const greeting = computed(() => {
 const latestTop = computed(() => latest[0] || null)
 const featuredTop = computed(() => featured[0] || null)
 
-// ---- 图片卡：展示头像大图（无头像时用首字母渐变占位），点击灯箱查看大图 ----
-const lightboxOpen = ref(false)
-function openLightbox() {
-  lightboxOpen.value = true
-}
-function closeLightbox() {
-  lightboxOpen.value = false
-}
-function onLightboxKey(e) {
-  if (e.key === 'Escape') closeLightbox()
-}
+// ---- 图片卡：展示头像大图（无头像时用首字母渐变占位），点击进入图片子页 /gallery 查看 ----
 
 // ---- 写文章按钮：config.writeUrl 已配置则跳转后台，否则提示待配置（不猜测个人链接） ----
 const writeToast = ref('')
@@ -123,15 +111,51 @@ const progressStyle = computed(() => {
   return { width: `${Math.min(100, ratio * 100)}%` }
 })
 
-// ---- 社交链接解析：空 href 时按图标派生（GitHub / Email），其余原样 ----
+// ---- 社交链接解析：空 href 时按图标派生（GitHub 自动补全；Email 点击复制地址，不跳转） ----
 const socialLinks = computed(() =>
   (site.socials || []).map((item) => {
     let href = item.href || ''
-    if (!href && item.icon === 'github') href = site.github
-    if (!href && item.icon === 'email') href = `mailto:${site.email}`
+    if (!href && item.icon === 'github') href = `https://github.com/${site.githubUser}`
     return { ...item, href }
   }),
 )
+
+// ---- 邮箱复制：点击邮箱图标复制 site.email 到剪贴板，按钮文字短暂变为"已复制" ----
+const emailCopied = ref(false)
+let emailCopiedTimer = null
+function copyEmail() {
+  const text = site.email || ''
+  const done = () => {
+    emailCopied.value = true
+    clearTimeout(emailCopiedTimer)
+    emailCopiedTimer = setTimeout(() => {
+      emailCopied.value = false
+    }, 2000)
+  }
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done))
+  } else {
+    fallbackCopy(text, done)
+  }
+}
+function fallbackCopy(text, done) {
+  const ta = document.createElement('textarea')
+  ta.value = text
+  ta.style.position = 'fixed'
+  ta.style.opacity = '0'
+  document.body.appendChild(ta)
+  ta.select()
+  try {
+    document.execCommand('copy')
+  } catch (e) {
+    /* noop */
+  }
+  document.body.removeChild(ta)
+  done()
+}
+function onSocialClick(item) {
+  if (item.icon === 'email') copyEmail()
+}
 
 // ---- 内联图标：侧栏 / 社交 / 播放器共用 ----
 const iconPaths = {
@@ -154,13 +178,12 @@ onMounted(() => {
   clockTimer = setInterval(() => {
     now.value = new Date()
   }, 1000)
-  window.addEventListener('keydown', onLightboxKey)
 })
 
 onUnmounted(() => {
   if (clockTimer) clearInterval(clockTimer)
-  window.removeEventListener('keydown', onLightboxKey)
   clearTimeout(writeToastTimer)
+  clearTimeout(emailCopiedTimer)
 })
 </script>
 
@@ -170,14 +193,11 @@ onUnmounted(() => {
       <!-- 主区域：卡片自由错落摆放（flex 流式 + 各卡宽度/错位不同，不重叠） -->
       <div class="home-main">
         <div class="home-cards">
-          <!-- 图片卡：问候卡上方，点击灯箱查看大图 -->
-          <article
+          <!-- 图片卡：问候卡上方，点击进入图片子页 /gallery -->
+          <RouterLink
+            to="/gallery"
             class="image-card glass-card reveal"
-            role="button"
-            tabindex="0"
-            aria-label="查看大图"
-            @click="openLightbox"
-            @keydown.enter="openLightbox"
+            aria-label="查看图片图集"
           >
             <img
               v-if="site.avatar && !avatarFailed"
@@ -187,10 +207,11 @@ onUnmounted(() => {
             />
             <div v-else class="image-card__placeholder">
               <span class="image-card__initial" aria-hidden="true">{{ heroInitial }}</span>
-              <span class="image-card__hint">查看大图</span>
+              <span class="image-card__hint">查看图集</span>
             </div>
             <span class="image-card__badge">PHOTO</span>
-          </article>
+            <span class="image-card__cta" aria-hidden="true">点击查看图集 →</span>
+          </RouterLink>
 
           <!-- 问候卡：只保留问候语（动态问候 + 标题 + 副标题），其余元素已移出/隐藏 -->
           <section class="intro-card glass-card reveal">
@@ -256,25 +277,26 @@ onUnmounted(() => {
 
           <!-- 社交 -->
           <section class="dash-card dash-card--social glass-card reveal">
-            <span class="dash__label">社交</span>
             <div class="dash__socials">
               <a
                 v-for="s in socialLinks"
                 :key="s.label"
                 class="dash__social"
-                :href="s.href"
-                target="_blank"
-                rel="noopener"
+                :href="s.icon === 'email' ? undefined : s.href"
+                :target="s.icon === 'email' ? undefined : '_blank'"
+                :rel="s.icon === 'email' ? undefined : 'noopener'"
+                :aria-label="s.icon === 'email' ? '复制邮箱地址' : `${s.label}（新窗口打开）`"
+                @click="onSocialClick(s)"
+                @keydown.enter="onSocialClick(s)"
               >
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="iconPath(s.icon)" /></svg>
-                {{ s.label }}
+                {{ s.icon === 'email' && emailCopied ? '已复制' : s.label }}
               </a>
             </div>
           </section>
 
           <!-- 播放器 -->
           <section class="dash-card dash-card--player glass-card reveal">
-            <span class="dash__label">播放器</span>
             <div class="player">
               <p class="player__song">{{ site.player?.title || '示例曲目' }}</p>
               <div class="player__controls">
@@ -286,39 +308,16 @@ onUnmounted(() => {
                 </div>
                 <span class="player__time">{{ formatTime(playerState.current) }} / {{ formatTime(playerState.duration) }}</span>
               </div>
-              <p class="player__hint">{{ playerReady ? '播放中，可在 config.player 更换曲目' : '示例曲目占位，配置 config.player.src 后启用' }}</p>
             </div>
             <audio
               ref="audioEl"
-              :src="site.player?.src"
+              :src="resolveUrl(site.player?.src)" 
               @timeupdate="onAudioTime"
               @ended="onAudioEnded"
               @play="playerState.playing = true"
               @pause="playerState.playing = false"
             ></audio>
           </section>
-        </div>
-
-        <!-- 灯箱：点击遮罩 / 关闭按钮 / Esc 关闭 -->
-        <div
-          v-if="lightboxOpen"
-          class="lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label="图片大图预览"
-          @click.self="closeLightbox"
-        >
-          <button class="lightbox__close" type="button" aria-label="关闭大图" @click="closeLightbox">×</button>
-          <img
-            v-if="site.avatar && !avatarFailed"
-            :src="resolveUrl(site.avatar)"
-            :alt="`${site.aboutName} 的头像大图`"
-            class="lightbox__img"
-          />
-          <div v-else class="lightbox__placeholder">
-            <span class="lightbox__initial" aria-hidden="true">{{ heroInitial }}</span>
-            <span class="lightbox__hint">暂无头像图片，可在 config.avatar 配置</span>
-          </div>
         </div>
 
         <!-- 写文章待配置提示 -->
@@ -370,9 +369,10 @@ onUnmounted(() => {
   align-items: start;
 }
 
-/* 图片卡：问候卡正上方，点击灯箱查看大图 */
+/* 图片卡：问候卡正上方，白色玻璃卡风格，点击进入图片子页 /gallery（hover 提示可点击查看） */
 .image-card {
   position: relative;
+  display: block;
   grid-column: 3;
   grid-row: 1;
   width: 100%;
@@ -381,7 +381,12 @@ onUnmounted(() => {
   overflow: hidden;
   padding: 0;
   border-radius: var(--radius-glass);
-  cursor: zoom-in;
+  text-decoration: none;
+  cursor: pointer;
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  box-shadow: var(--card-shadow);
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .image-card img {
@@ -389,11 +394,18 @@ onUnmounted(() => {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.3s ease;
+  transition: transform 0.35s ease;
+}
+
+.image-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent-2) 55%, var(--card-border));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-2) 45%, transparent), var(--card-shadow),
+    0 16px 40px -16px color-mix(in srgb, var(--accent-2) 45%, transparent);
 }
 
 .image-card:hover img {
-  transform: scale(1.04);
+  transform: scale(1.05);
 }
 
 .image-card__placeholder {
@@ -431,6 +443,30 @@ onUnmounted(() => {
   letter-spacing: 0.14em;
 }
 
+/* hover 提示：默认隐藏在卡片底部，悬停时浮现“点击查看图集” */
+.image-card__cta {
+  position: absolute;
+  left: 12px;
+  right: 12px;
+  bottom: 10px;
+  padding: 5px 10px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-align: center;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.image-card:hover .image-card__cta {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 /* 问候卡：仅问候语（动态问候 + 标题 + 副标题），内容垂直居中，高度与左侧导航一致保证底边平行 */
 .intro-card {
   grid-column: 3;
@@ -446,13 +482,13 @@ onUnmounted(() => {
 }
 
 .intro-card__avatar {
-  width: 72px;              /* ← 头像大小，改这里 */
-  height: 72px;             /* ← 保持与 width 相等才是正圆 */
-  border-radius: 50%;       /* 圆形；想要圆角矩形改成 16px */
-  object-fit: cover;        /* 关键：不变形，裁切填充 */
-  margin-bottom: var(--space-4);   /* 与下方问候语留距 */
+  width: 72px;             
+  height: 72px;            
+  border-radius: 50%;      
+  object-fit: cover;       
+  margin-bottom: var(--space-4);  
   box-shadow: 0 0 0 3px var(--bg), 0 10px 24px -10px color-mix(in srgb, var(--accent) 55%, transparent);
-  flex: 0 0 auto;           /* 防止被 flex 容器压扁 */
+  flex: 0 0 auto;        
 }
 
 .intro-card__greeting {
@@ -497,75 +533,6 @@ onUnmounted(() => {
   align-items: center;
   gap: 8px;
   white-space: nowrap;
-}
-
-/* ===== 灯箱：图片大图预览 ===== */
-.lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: var(--space-5);
-  background: rgba(20, 16, 12, 0.72);
-  backdrop-filter: blur(6px);
-  animation: lightbox-in 0.2s ease;
-}
-
-.lightbox__img {
-  max-width: min(92vw, 720px);
-  max-height: 84vh;
-  border-radius: var(--radius-glass);
-  box-shadow: 0 24px 70px -18px rgba(0, 0, 0, 0.55);
-  object-fit: contain;
-}
-
-.lightbox__placeholder {
-  display: grid;
-  place-items: center;
-  gap: var(--space-3);
-  width: min(92vw, 560px);
-  height: 320px;
-  border-radius: var(--radius-glass);
-  background: var(--gradient);
-  color: var(--accent-contrast);
-  font-family: var(--font-display);
-}
-
-.lightbox__initial {
-  font-size: 4rem;
-  font-weight: 700;
-}
-
-.lightbox__hint {
-  font-size: 14px;
-  letter-spacing: 0.06em;
-}
-
-.lightbox__close {
-  position: absolute;
-  top: 18px;
-  right: 22px;
-  width: 40px;
-  height: 40px;
-  border: none;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.14);
-  color: #fff;
-  font-size: 24px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background-color 0.15s ease, transform 0.15s ease;
-}
-
-.lightbox__close:hover {
-  background: rgba(255, 255, 255, 0.28);
-  transform: rotate(90deg);
-}
-
-@keyframes lightbox-in {
-  from { opacity: 0; transform: scale(0.98); }
-  to { opacity: 1; transform: scale(1); }
 }
 
 /* ===== 写文章待配置提示 ===== */
@@ -636,108 +603,12 @@ onUnmounted(() => {
   font-size: 12px;
 }
 
-/* ===== 精选项目：Featured 大卡 + 侧边精选卡 ===== */
-.featured-grid {
-  display: grid;
-  grid-template-columns: 1.35fr 1fr;
-  gap: var(--space-5);
-  align-items: stretch;
-}
-
-.featured-grid__side {
-  display: grid;
-  gap: var(--space-5);
-  align-content: stretch;
-}
-
-@media (max-width: 900px) {
-  .featured-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
-
-.placeholder {
-  display: grid;
-  place-items: center;
-  min-height: 220px;
-  border: 1px dashed var(--border);
-  border-radius: var(--radius-card);
-  color: var(--text-muted);
-  font-size: 14px;
-}
-
-/* ===== 最新文章 ===== */
-.post-list {
-  border-top: 1px solid var(--border);
-  padding-top: var(--space-2);
-}
-
-.post-list__filters {
-  margin-bottom: var(--space-3);
-}
-
-/* ===== 关于我 ===== */
-.about {
-  display: flex;
-  align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-5) var(--space-6);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-glass);
-  background: var(--surface);
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.about:hover {
-  border-color: var(--accent-2);
-  box-shadow: 0 0 0 1px var(--accent-2), var(--shadow-card),
-    0 12px 28px -14px color-mix(in srgb, var(--accent-2) 45%, transparent);
-}
-
-.about__avatar {
-  flex: 0 0 auto;
-  display: grid;
-  place-items: center;
-  width: 60px;
-  height: 60px;
-  overflow: hidden;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--accent-contrast);
-  font-size: 1.45rem;
-  font-weight: 700;
-  box-shadow: 0 0 0 3px var(--bg), 0 10px 24px -10px color-mix(in srgb, var(--accent) 60%, transparent);
-}
-
-.about__avatar img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.about__body {
-  min-width: 0;
-}
-
-.about__headline {
-  margin: 0 0 var(--space-3);
-  font-size: 1.05rem;
-  line-height: 1.6;
-}
-
-.about__socials {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-}
-
 /* ===== 环绕卡片：最新文章 / 近期项目 / 播放器 / 社交（问候卡四周围绕错落） ===== */
 .dash-card {
   display: flex;
   flex-direction: column;
   gap: 6px;
   width: 320px;
-  height:180px;
   padding: var(--space-4);
   border-radius: var(--radius-glass);
 }
@@ -755,45 +626,37 @@ onUnmounted(() => {
   display: flex;
   align-items: flex-start;
   justify-content: flex-start;
-  gap: 12px;
+  gap: 72px;
 }
 
 .home-stagger .dash-card {
   flex: 0 0 290px;
   min-width: 296px;
   min-height: 140px;
-  padding: 5px 8px;
-  gap: 3px;
 }
 
-.home-stagger .dash__label {
-  font-size: 10px;
+/* 社交 / 播放器：比最新文章卡更小 */
+.home-stagger .dash-card--social,
+.home-stagger .dash-card--player {
+  flex: 0 0 180px;   
+  height: 100px;      
+  min-width: 0;            
+  min-height: auto;         
+  padding: var(--space-2) var(--space-3);   
+  gap: 0;
+  align-items: center;
+  text-align: center;
+  justify-content: center;
 }
 
-.home-stagger .dash__title {
-  font-size: 0.75rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.home-stagger .dash-card--player .player {
+  width: 100%;
+  gap: 0;              
 }
 
-.home-stagger .dash__text {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  font-size: 10.5px;
-}
-
-.home-stagger .player {
-  gap: 3px;
-}
-
-.home-stagger .player__song {
-  font-size: 12px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.home-stagger .dash-card--player .player__song {
+  margin: 0;            
+  line-height: 1.2;
 }
 
 .home-stagger .player__controls {
@@ -812,13 +675,6 @@ onUnmounted(() => {
 
 .home-stagger .player__time {
   font-size: 10px;
-}
-
-.home-stagger .player__hint {
-  font-size: 10px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .home-stagger .dash__social {
@@ -872,17 +728,15 @@ onUnmounted(() => {
 }
 
 .player__song {
-  margin: 0;
+  margin-top: 10px;
   font-weight: 600;
   color: var(--text);
-  font-size: 14px;
-  line-height: 1.4;
+  font-size: 12px;
 }
 
 .player__controls {
   display: flex;
   align-items: center;
-  gap: 10px;
 }
 
 .player__btn {
@@ -937,13 +791,6 @@ onUnmounted(() => {
   font-variant-numeric: tabular-nums;
 }
 
-.player__hint {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 /* 社交 */
 .dash__socials {
   display: flex;
@@ -984,6 +831,8 @@ onUnmounted(() => {
     align-items: stretch;
     margin-top: 0;
     position: static;
+    /* 重置桌面推导内边距（33.33vw + 91.33px 在窄屏会推飞内容导致横向溢出） */
+    padding: 10px 16px 0;
   }
 
   .home-main {
@@ -1028,17 +877,27 @@ onUnmounted(() => {
     margin-left: 0;
     margin-right: 0;
   }
+
+  /* 覆盖桌面固定卡宽与最小宽度，窄屏单列通栏不溢出 */
+  .write-card,
+  .clock-card,
+  .dash-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .home-stagger {
+    gap: var(--space-3);
+  }
+
+  .home-stagger .dash-card {
+    flex-basis: 100%;
+    min-width: 0;
+  }
 }
 
 @media (max-width: 480px) {
   .intro-card {
-    padding: var(--space-4);
-  }
-
-  .about {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: var(--space-3);
     padding: var(--space-4);
   }
 }

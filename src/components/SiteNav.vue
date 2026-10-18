@@ -183,6 +183,7 @@ const iconPath = (name) => iconPaths[name] || iconPaths.link
   align-items: center;
   gap: var(--space-3);
   margin-bottom: 8px;
+  text-decoration: none;
   transition: margin-bottom 0.4s cubic-bezier(0.22, 0.61, 0.36, 1), gap 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 
@@ -266,7 +267,7 @@ const iconPath = (name) => iconPaths[name] || iconPaths.link
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 7px 14px;
+  padding: 14px 14px;
   border-radius: var(--radius-btn);
   color: var(--text-muted);
   font-size: 15px;
@@ -335,7 +336,8 @@ const iconPath = (name) => iconPaths[name] || iconPaths.link
 /* 窄屏兜底：顶部通栏横向展示，避免固定定位遮挡内容 */
 @media (max-width: 900px) {
   .site-nav {
-    width: auto;
+    width: 100%;
+    max-width: 100%;
     height: auto;
     flex-direction: row;
     align-items: center;
@@ -351,6 +353,24 @@ const iconPath = (name) => iconPaths[name] || iconPaths.link
   .site-nav__menu {
     flex-direction: row;
     flex-wrap: wrap;
+  }
+}
+
+/* 超窄屏：导航项进一步收紧，避免通栏换行撑破视口 */
+@media (max-width: 480px) {
+  .site-nav {
+    padding: 8px 10px;
+  }
+
+  .site-nav__link {
+    padding: 6px 8px;
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .site-nav__link svg {
+    width: 16px;
+    height: 16px;
   }
 }
 </style>

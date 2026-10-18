@@ -5,6 +5,36 @@
  * 导航左侧站点名、页脚版权、浏览器标签标题全部读 site.name，
  * 改这一处即可全站生效（index.html 里的 <title> 只是 JS 执行前的占位）。
  */
+// 1.自动扫描目录下的图片
+const photoModules = import.meta.glob('./assets/img/photos/*.{jpg,jpeg,png,webp}',{
+  eager: true,
+  import: 'default'
+})
+
+// 自动排序
+const sortedPaths = Object.keys(photoModules).sort((a, b) => a.localeCompare(b, 'zh-CN', { numeric: true }))
+const photoUrls = sortedPaths.map(path => photoModules[path])
+
+// 2.散落样式
+const layoutPresets = [
+  { basis: '32%', ratio: '4 / 3', rot: -2,   rise: 26 },
+  { basis: '24%', ratio: '3 / 4', rot: 2.2,  rise: 6 },
+  { basis: '26%', ratio: '16 / 10', rot: 1.6, rise: 42 },
+  { basis: '30%', ratio: '1 / 1', rot: -2.4, rise: 0 },
+  { basis: '22%', ratio: '4 / 5', rot: 0.9,  rise: 34 },
+  { basis: '36%', ratio: '3 / 2', rot: -1.2, rise: 18 },
+]
+
+// 3.自动组合成最终的数组
+const autoGallery = photoUrls.map((url,i) => {
+  const preset = layoutPresets[i % layoutPresets.length]
+  return {
+    src: url,
+    alt: `生活照片 ${i + 1}`,
+    ...preset
+  }
+})
+
 export const site = {
   // 站点名：导航左侧、页脚版权、浏览器标签标题都读这里
   name: 'Kam-Blog',
@@ -19,8 +49,7 @@ export const site = {
   // 关于页
   aboutName: '你的名字',
   aboutHeadline: '全栈工程师 / 主要写前端，偶尔写后端',
-  email: 'you@example.com',
-  avatar:  new URL('./assets/img/header.png', import.meta.url).href, // 头像图片路径，留空则用首字母色块兜底
+  email: '3214779709@qq.com',
   resume: '', // 简历 PDF 路径（如 /resume.pdf），留空则不渲染该按钮，不产生死链
 
   // 首页动态问候语：按本地时间段切换（6点前=night, 6-12=morning, 12-18=afternoon, 18点后=evening）
@@ -44,23 +73,16 @@ export const site = {
 
   // 首页底部音乐播放器卡：src 留空则显示占位、播放按钮禁用
   player: {
-    title: '示例曲目 · 待配置',
-    src: '',
+    title: '回到你身边-h3r3刘清云',
+    src: new URL('./assets/audio/回到你身边.flac',import.meta.url).href,
   },
 
-  // 首页底部社交卡：href 留空时 GitHub 自动派生 githubUser、Email 自动派生 mailto:email
+  // 首页社交卡：href 留空时 GitHub 自动派生 githubUser；Email 图标为点击复制地址
   socials: [
     { label: 'GitHub', icon: 'github', href: '' },
     { label: 'Email', icon: 'email', href: '' },
   ],
 
-  // 文章点赞写回仓库（GitHub Contents API，零后端）：
-  // owner/repo 留空时分别回退到 githubUser 与 Kam-hud.github.io；
-  // token 填入有 Contents:write 权限的 PAT 后，点赞才会真正写回仓库的 data/likes.json。
-  likes: {
-    owner: '',
-    repo: '',
-    path: 'data/likes.json',
-    token: '',
-  },
+  // 图片集
+  gallery : autoGallery
 }
