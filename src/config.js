@@ -47,8 +47,8 @@ export const site = {
   githubUser: 'Kam-hud',
 
   // 关于页
-  aboutName: '你的名字',
-  aboutHeadline: '全栈工程师 / 主要写前端，偶尔写后端',
+  aboutName: 'Kam',
+  aboutHeadline: '',
   email: '3214779709@qq.com',
   resume: '', // 简历 PDF 路径（如 /resume.pdf），留空则不渲染该按钮，不产生死链
 
@@ -69,7 +69,7 @@ export const site = {
   ],
 
   // 写文章按钮：指向博客后台/新建文章页的真实地址；留空则按钮显示“待配置”提示，不猜测个人链接
-  writeUrl: '',
+  writeUrl: '/#/write',
 
   // 首页底部音乐播放器卡：src 留空则显示占位、播放按钮禁用
   player: {

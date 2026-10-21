@@ -40,27 +40,13 @@ const initial = site.aboutName.slice(0, 1)
     <div class="prose">
       <p>你好，欢迎来这里。</p>
       <p>
-        我平时主要写前端，也做一些后端的事。这个站点用 Vue 3 + Vite 搭，
-        内容全部是 Markdown，没有评论、没有统计、没有登录——写下来是为了少维护一点。
+        我平时主要写前端。这个站点用 Vue 3 + Vite 搭。
       </p>
       <p>
         作品区的每个项目都尽量配一个能直接点开的 Demo，也尽量把当时的取舍写清楚，
         因为踩过的坑比结果本身更有参考价值。
       </p>
-      <p>如果你对我的项目或者某篇文章有想法，欢迎邮件找我。</p>
     </div>
-
-    <ul class="about__links">
-      <li>
-        <a class="btn" :href="site.github" target="_blank" rel="noopener">GitHub ↗</a>
-      </li>
-      <li>
-        <a class="btn" :href="`mailto:${site.email}`">Email</a>
-      </li>
-      <li v-if="site.resume">
-        <a class="btn" :href="resolveUrl(site.resume)" target="_blank" rel="noopener">简历 PDF ↗</a>
-      </li>
-    </ul>
   </div>
 </template>
 
@@ -101,15 +87,6 @@ const initial = site.aboutName.slice(0, 1)
   margin: 0;
   color: var(--text-muted);
   font-size: 14.5px;
-}
-
-.about__links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-  margin: var(--space-5) 0 0;
-  padding: 0;
-  list-style: none;
 }
 
 @media (max-width: 480px) {

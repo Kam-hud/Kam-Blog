@@ -8,6 +8,7 @@ import PostsView from '../views/PostsView.vue'
 import PostView from '../views/PostView.vue'
 import AboutView from '../views/AboutView.vue'
 import GalleryView from '../views/GalleryView.vue'
+import WriteView from '../views/WriteView.vue'
 
 import NotFoundView from '../views/NotFoundView.vue'
 
@@ -21,6 +22,7 @@ const routes = [
   { path: '/posts/:slug', name: 'post', component: PostView },
   { path: '/about', name: 'about', component: AboutView, meta: { title: '关于' } },
   { path: '/gallery', name: 'gallery', component: GalleryView, meta: { title: '图集' } },
+  { path: '/write', name: 'write', component: WriteView, meta: { title: '写文章' } },
   { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundView, meta: { title: '页面不存在' } },
 ]
 
