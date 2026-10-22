@@ -35,7 +35,8 @@ export default async function handler(req, res) {
 
   let payload = {}
   try {
-    payload = JSON.parse(req.body || '{}')
+    // Vercel 运行时 req.body 可能已是对象（Node 解析后）；本地测试/其他运行时可能是字符串
+    payload = typeof req.body === 'string' ? JSON.parse(req.body || '{}') : (req.body || {})
   } catch (_) {
     res.status(400).json({ ok: false, error: '请求体不是合法 JSON' })
     return
