@@ -145,7 +145,7 @@ onBeforeUnmount(() => {
           }"
         >
           <div class="gallery-item__frame">
-            <img :src="img.src" :alt="img.alt" loading="lazy" />
+            <img :src="img.src" :alt="img.alt" loading="lazy" decoding="async" />
           </div>
         </figure>
       </div>
