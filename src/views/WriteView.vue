@@ -185,7 +185,7 @@ async function publish() {
   function finishDowngrade() {
     const md = buildMarkdown()
     downloadLocal(md)
-    showMsg('info', '静态站点模式：已生成并下载 .md 文件，请放入 src/content/posts/ 并推送仓库后自动生效')
+    showMsg('info', '本地预览模式：未检测到 /api/write-post 服务，已生成并下载 .md 文件，可手动放回 src/content/posts')
   }
 
   try {
@@ -241,7 +241,7 @@ onBeforeUnmount(() => {
     <div class="write-card">
       <header class="write-card__head">
         <h1 class="write-card__title">写文章</h1>
-        <p class="write-card__sub">编辑 Markdown 正文，右侧实时预览；发布会下载 .md 文件，放入 src/content/posts/ 并推送 GitHub 即可生效。</p>
+        <p class="write-card__sub">编辑 Markdown 正文，右侧实时预览；发布后提交到 GitHub 仓库，等待自动部署。</p>
       </header>
 
       <div v-if="publishMsg" class="write-msg" :class="`write-msg--${publishMsg.type}`">
@@ -273,8 +273,8 @@ onBeforeUnmount(() => {
           </label>
 
           <label class="write-field">
-            <span class="write-field__label">发布密码（静态站点无需填写，可留空）</span>
-            <input v-model="password" class="write-input" type="password" placeholder="静态站点模式下无需密码" autocomplete="off" />
+            <span class="write-field__label">发布密码（部署后用于校验，本地可留空）</span>
+            <input v-model="password" class="write-input" type="password" placeholder="POST_PASSWORD（Vercel 环境变量）" autocomplete="off" />
           </label>
 
           <div class="write-field write-field--grow">
