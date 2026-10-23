@@ -213,8 +213,12 @@ onUnmounted(() => {
             <span class="image-card__cta" aria-hidden="true">点击查看图集 →</span>
           </RouterLink>
 
-          <!-- 问候卡：只保留问候语（动态问候 + 标题 + 副标题），其余元素已移出/隐藏 -->
-          <section class="intro-card glass-card reveal">
+          <!-- 问候卡：点击进入心月狐互动子页 /pet -->
+          <RouterLink
+            to="/pet"
+            class="intro-card glass-card reveal"
+            aria-label="进入心月狐互动子页"
+          >
             <img 
               v-if="site.avatar && !avatarFailed"
               :src="resolveUrl(site.avatar)" alt="头像"
@@ -224,8 +228,9 @@ onUnmounted(() => {
             <div class="intro-card__text">
               <p class="intro-card__greeting">{{ greeting }}</p>
               <h2 class="intro-card__title">{{ site.heroTitle }}</h2>
+              <span class="intro-card__cta" aria-hidden="true">点击互动 · 心月狐 →</span>
             </div>
-          </section>
+          </RouterLink>
 
           <!-- 写文章独立卡片 -->
           <section class="write-card glass-card reveal">
@@ -467,7 +472,8 @@ onUnmounted(() => {
   transform: translateY(0);
 }
 
-/* 问候卡：仅问候语（动态问候 + 标题 + 副标题），内容垂直居中，高度与左侧导航一致保证底边平行 */
+/* 问候卡：仅问候语（动态问候 + 标题 + 副标题），内容垂直居中，高度与左侧导航一致保证底边平行。
+   作为入口链接：可点击进入心月狐互动子页 /pet */
 .intro-card {
   grid-column: 3;
   grid-row: 2;
@@ -479,6 +485,32 @@ onUnmounted(() => {
   padding: var(--space-4);
   border-radius: var(--radius-glass);
   text-align: center;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.intro-card:hover {
+  transform: translateY(-2px);
+}
+
+.intro-card__cta {
+  margin-top: var(--space-2);
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--warm-accent-soft);
+  color: var(--warm-accent);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.intro-card:hover .intro-card__cta {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 .intro-card__avatar {
