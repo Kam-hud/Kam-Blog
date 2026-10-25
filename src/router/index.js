@@ -1,17 +1,16 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import { site } from '../config'
 
-import HomeView from '../views/HomeView.vue'
-import ProjectsView from '../views/ProjectsView.vue'
-import ProjectDetailView from '../views/ProjectDetailView.vue'
-import PostsView from '../views/PostsView.vue'
-import PostView from '../views/PostView.vue'
-import AboutView from '../views/AboutView.vue'
-import GalleryView from '../views/GalleryView.vue'
-import WriteView from '../views/WriteView.vue'
-import PetView from '../views/PetView.vue'
-
-import NotFoundView from '../views/NotFoundView.vue'
+const HomeView = () => import('../views/HomeView.vue')
+const ProjectsView = () => import('../views/ProjectsView.vue')
+const ProjectDetailView = () => import('../views/ProjectDetailView.vue')
+const PostsView = () => import('../views/PostsView.vue')
+const PostView = () => import('../views/PostView.vue')
+const AboutView = () => import('../views/AboutView.vue')
+const GalleryView = () => import('../views/GalleryView.vue')
+const WriteView = () => import('../views/WriteView.vue')
+const PetView = () => import('../views/PetView.vue')
+const NotFoundView = () => import('../views/NotFoundView.vue')
 
 // 使用 hash 模式：URL 中 '#' 之后的部分不参与服务器请求，
 // 因此刷新任意页面都不会 404，GitHub Pages 无需任何 rewrite 配置。
