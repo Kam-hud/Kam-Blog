@@ -228,7 +228,7 @@ onUnmounted(() => {
             <div class="intro-card__text">
               <p class="intro-card__greeting">{{ greeting }}</p>
               <h2 class="intro-card__title">{{ site.heroTitle }}</h2>
-              <span class="intro-card__cta" aria-hidden="true">点击互动 · 心月狐 →</span>
+              <span class="intro-card__cta" aria-hidden="true">点击互动 →</span>
             </div>
           </RouterLink>
 
